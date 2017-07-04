@@ -28,4 +28,5 @@ public class ProductDTO extends BaseDTO{
 	private String productSize;
 	private String productQnty;
 	private String productPrice;
+	private byte[] productImage;
 }

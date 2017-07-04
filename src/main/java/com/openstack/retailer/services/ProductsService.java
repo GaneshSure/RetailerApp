@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.openstack.retailer.entities.ProductEntity;
 import com.openstack.retailer.exception.ResourceNotFoundException;
+import com.openstack.retailer.exception.RetailerException;
 import com.openstack.retailer.repositories.ProductsRepository;
 
 /**
@@ -32,10 +33,26 @@ public class ProductsService {
 	
 	
 	public void saveOrUpdate(ProductEntity product) {
-		logger.info(" Inside saveOrUpdate " + product.toString());
-		productsRepository.save(product);
+		try {
+			logger.info(" Inside saveOrUpdate " + product.toString());
+			productsRepository.save(product);
+		} catch (Exception e) {
+			logger.error(" Exception occured while save/update Product information " + e.getMessage());
+			throw new RetailerException(product.getProductName(),
+					" Something went wrong while save/update Product ");
+		}
 	}
 	
+	public void delete(ProductEntity productEntity) {
+		try {
+			logger.info("Inside delete ---> " + productEntity.toString());
+			productsRepository.delete(productEntity);
+		} catch (Exception e) {
+			logger.error(" Exception occured while deleting Product information " + e.getMessage());
+			throw new RetailerException(productEntity.getProductName(),
+					" Something went wrong while deleting Product information");
+		}
+	}
 	public ProductEntity getProduct(long id){
 		return productsRepository.getOne(id);
 	}

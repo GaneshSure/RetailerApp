@@ -50,4 +50,7 @@ public class ProductEntity implements Serializable{
 	
 	@Column(name = "PRODUCT_PRICE")
 	private BigDecimal productPrice;
+	
+	@Column(name = "PRODUCT_IMAGE")
+	private byte[] productImage;
 }

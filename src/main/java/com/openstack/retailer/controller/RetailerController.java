@@ -131,7 +131,7 @@ public class RetailerController {
 	 * @param name - can be empty or some user name as query param eg: /greeting?name= Rakesh Muppa
 	 * @return Hello World ..!
 	 */
-	@RequestMapping("/greeting")
+	@RequestMapping(value = "/greeting", method =RequestMethod.GET, produces = "application/json")
 	public ResponseEntity<String> greeting(
 			@RequestParam(value = "name", required = false, defaultValue = "World") String name) {
 		logger.info(" default test API ~~> " + name);
