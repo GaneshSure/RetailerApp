@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.openstack.retailer.dtos.SuccessResponse;
 import com.openstack.retailer.dtos.UserDTO;
 import com.openstack.retailer.dtos.UserRequest;
 import com.openstack.retailer.entities.UserEntity;
@@ -95,16 +96,20 @@ public class RetailerController {
 	 */
 	@RequestMapping(method = RequestMethod.POST, value = "/login", produces = MediaType.APPLICATION_JSON_VALUE, consumes = {
 			MediaType.APPLICATION_JSON_VALUE })
-	public @ResponseBody String login(@RequestBody UserRequest userReq) {
+	public @ResponseBody SuccessResponse login(@RequestBody UserRequest userReq) {
 		UserDTO userForm = userReq.getData();
+		SuccessResponse response = new SuccessResponse();
 		logger.info("Inside login ~~> " + userForm.getUserName());
 		UserEntity userEntity = userService.getUserByUserId(userReq.getData().getUserName());
-		logger.info(" Is password matched with DB ==> "
-				+ new BCryptPasswordEncoder().matches(userForm.getPassword(), userEntity.getPassword()));
+		
 		if (userForm.getPhonrNumber() == userEntity.getPhonrNumber()
 				&& new BCryptPasswordEncoder().matches(userForm.getPassword(), userEntity.getPassword())) {
-			return "Log in Success";// new ResponseEntity<String>("Log in
-									// Success",HttpStatus.OK);
+			logger.info(" Is password matched with DB ==> "
+					+ new BCryptPasswordEncoder().matches(userForm.getPassword(), userEntity.getPassword()));
+			response.setStatus(HttpStatus.OK.value());
+			response.setMessage("Sign-in Success");
+			response.setUser(userEntity);
+			return response;
 		} else {
 			throw new UnAuthorizedException(userForm.getUserName(), "Please enter valid mobile number and password..!");
 		}
