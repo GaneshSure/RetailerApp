@@ -12,13 +12,15 @@ import lombok.Data;
  * 
  */
 @Data
-public class SuccessResponse extends BaseDTO{
+public class LoginResponse extends BaseDTO{
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -7185946916910136148L;
+	private static final long serialVersionUID = 6027995795868608677L;
 
 	private int status;
 	private String message;
+	private LoggedInUserDTO user;
+	
 }

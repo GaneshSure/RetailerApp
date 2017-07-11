@@ -25,12 +25,12 @@ public class UserDTO extends BaseDTO{
 	private long id;
 	private String userName;
 	private String password;
-	private long phonrNumber;
+	private long phoneNumber;
 	private String emailId;
 	private String firmName;
 	private String villageName;
 	private String mondalName;
 	private String districtName;
-	private String userType;
+	private String userRole;
 	
 }

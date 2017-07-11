@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.openstack.retailer.exception;
+package com.openstack.retailer.dtos;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +16,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ExceptionResponse {
 
-	private int errorCode;
-	private String errorMessage;
+	private int status;
+	private String message;
 }

@@ -64,7 +64,12 @@ public class UserService {
 		return userEntities;
 	}
 	
+	public UserEntity getUserByPhoneNumber(final Long phoneNumber) {
+		logger.info(" Inside getUserByPhoneNumber " + phoneNumber);
+		return userRepository.findByPhoneNumber(phoneNumber);
+	}
+	
 	public boolean validateMobileNumber(long mobile){
-		return userRepository.existsByPhonrNumber(mobile);
+		return userRepository.existsByPhoneNumber(mobile);
 	}
 }

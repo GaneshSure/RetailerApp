@@ -17,7 +17,9 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
 	UserEntity findByUserName(String username);
 	
-	boolean existsByPhonrNumber(Long phonrNumber);
+	boolean existsByPhoneNumber(Long phoneNumber);
+	
+	UserEntity findByPhoneNumber(Long phoneNumber);
 	
 	/*@Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM User u WHERE u.mobile = :mobile")
     boolean existsByName(@Param("mobile") String mobile);*/

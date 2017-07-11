@@ -42,7 +42,7 @@ public class UserEntity implements Serializable {
 	private String password;
 
 	@Column(name = "PHONE_NUMBER", unique = true)
-	private long phonrNumber;
+	private long phoneNumber;
 
 	@Column(name = "EMAIL_ID", unique = true)
 	private String emailId;
@@ -60,6 +60,6 @@ public class UserEntity implements Serializable {
 	private String districtName;
 	
 	@Column(name = "USER_TYPE")
-	private String userType;
+	private String userRole;
 	
 }

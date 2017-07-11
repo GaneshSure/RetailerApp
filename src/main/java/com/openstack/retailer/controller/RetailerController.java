@@ -20,12 +20,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.openstack.retailer.dtos.ForgotPwdRequest;
+import com.openstack.retailer.dtos.LoggedInUserDTO;
+import com.openstack.retailer.dtos.LoginResponse;
 import com.openstack.retailer.dtos.SuccessResponse;
 import com.openstack.retailer.dtos.UserDTO;
 import com.openstack.retailer.dtos.UserRequest;
 import com.openstack.retailer.entities.UserEntity;
 import com.openstack.retailer.exception.ResourceNotFoundException;
-import com.openstack.retailer.exception.RetailerException;
 import com.openstack.retailer.exception.UnAuthorizedException;
 import com.openstack.retailer.modelmapper.GenericModelMapper;
 import com.openstack.retailer.services.UserService;
@@ -45,18 +47,31 @@ public class RetailerController {
 	@Autowired
 	private UserService userService;
 
-	@RequestMapping(method = RequestMethod.POST, value = "/saveUser", produces = { "application/json" }, consumes = {
+	@RequestMapping(method = RequestMethod.POST, value = "/signup", produces = { "application/json" }, consumes = {
 			"application/json" })
-	public ResponseEntity<String> saveUser(@RequestBody UserRequest userReq) {
+	public ResponseEntity<?> saveUser(@RequestBody UserRequest userReq) {
+		SuccessResponse response = new SuccessResponse();
 		if (userReq != null) {
 			UserDTO userDTO = userReq.getData();
 			userDTO.setPassword(new BCryptPasswordEncoder().encode(userDTO.getPassword()));
 			logger.info("Inside saveUser ~~> " + userDTO.getUserName());
 			UserEntity userEntity = GenericModelMapper.map(userDTO, UserEntity.class);
-			userService.saveOrUpdate(userEntity);
-			return new ResponseEntity<String>(" Successfully created user ", HttpStatus.OK);
-		}else
-			return new ResponseEntity<String>(" Request Object is Empty ", HttpStatus.NOT_ACCEPTABLE);
+			try {
+				userService.saveOrUpdate(userEntity);
+				response.setStatus(HttpStatus.OK.value());
+				response.setMessage("sign-up success");
+
+			} catch (Exception e) {
+				logger.info(" Exception while saving user ~~> " + e.getMessage());
+				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+				response.setMessage(e.getMessage());
+			}
+
+		} else {
+			response.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
+			response.setMessage(" Request Object is Empty ");
+		}
+		return new ResponseEntity<SuccessResponse>(response, HttpStatus.OK);
 	}
 
 	@RequestMapping(method = RequestMethod.PUT, value = "/updateUser", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -91,52 +106,77 @@ public class RetailerController {
 
 	/**
 	 * This API used to validate the login credentials based on mobile/password
-	 * @param {@UserRequest} userReq
+	 * 
+	 * @param {@UserRequest}
+	 * 			userReq
 	 * @return Success/Failure message.
 	 */
 	@RequestMapping(method = RequestMethod.POST, value = "/login", produces = MediaType.APPLICATION_JSON_VALUE, consumes = {
 			MediaType.APPLICATION_JSON_VALUE })
-	public @ResponseBody SuccessResponse login(@RequestBody UserRequest userReq) {
+	public @ResponseBody LoginResponse login(@RequestBody UserRequest userReq) {
 		UserDTO userForm = userReq.getData();
-		SuccessResponse response = new SuccessResponse();
-		logger.info("Inside login ~~> " + userForm.getUserName());
+		LoginResponse response = null;
+		logger.info("Inside login ~~> " + userForm.getPhoneNumber());
 		UserEntity userEntity = userService.getUserByUserId(userReq.getData().getUserName());
-		
-		if (userForm.getPhonrNumber() == userEntity.getPhonrNumber()
-				&& new BCryptPasswordEncoder().matches(userForm.getPassword(), userEntity.getPassword())) {
-			logger.info(" Is password matched with DB ==> "
-					+ new BCryptPasswordEncoder().matches(userForm.getPassword(), userEntity.getPassword()));
-			response.setStatus(HttpStatus.OK.value());
-			response.setMessage("Sign-in Success");
-			response.setUser(userEntity);
-			return response;
-		} else {
-			throw new UnAuthorizedException(userForm.getUserName(), "Please enter valid mobile number and password..!");
-		}
 
+		if (userForm.getPhoneNumber() == userEntity.getPhoneNumber()) {
+			if (new BCryptPasswordEncoder().matches(userForm.getPassword(), userEntity.getPassword())) {
+				LoggedInUserDTO userDTO = new LoggedInUserDTO();
+				logger.info(" Is password matched with DB ==> "
+						+ new BCryptPasswordEncoder().matches(userForm.getPassword(), userEntity.getPassword()));
+				response = new LoginResponse();
+				response.setStatus(200);
+				response.setMessage("Sign-in Success");
+				userDTO.setUserId(userEntity.getId());
+				userDTO.setName(userEntity.getUserName());
+				userDTO.setUserRole(userEntity.getUserRole());
+				response.setUser(userDTO);
+			} else
+				throw new UnAuthorizedException(userForm.getUserName(), "Authentication Error..!");
+		} else {
+			response = new LoginResponse();
+			response.setStatus(HttpStatus.FORBIDDEN.value());
+			response.setMessage("Please Register First..!");
+		}
+		return response;
 	}
 
 	/**
-	 * This API is used to validate the Phone number for forgot password scenario. 
-	 * If user enters valid mobile number then user is allowed to update the new password else not allowed.
+	 * This API is used to validate the Phone number for forgot password
+	 * scenario. If user enters valid mobile number then user is allowed to
+	 * update the new password else not allowed.
+	 * 
 	 * @param mobile
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/validateMobile/{mobile}")
-	public @ResponseBody String validatePhone(@PathVariable("mobile") long mobile) {
-		logger.info("Inside getUserDetails ~~> " + mobile);
-		if (userService.validateMobileNumber(mobile))
-			return " Valid mobile number";
-		else
-			throw new RetailerException(String.valueOf(mobile), " Invalid mobile number");
+	@RequestMapping(method = RequestMethod.PUT, value = "/forgotpwd")
+	public @ResponseBody SuccessResponse forgotPassword(@RequestBody final ForgotPwdRequest request) {
+		logger.info("Inside forgotPassword ~~> " + request.getData().getPhoneNumber());
+		SuccessResponse response = new SuccessResponse();
+		if (userService.validateMobileNumber(request.getData().getPhoneNumber())) {
+			UserEntity user = userService.getUserByPhoneNumber(request.getData().getPhoneNumber());
+			if (user != null) {
+				user.setPassword(new BCryptPasswordEncoder().encode(request.getData().getNewPassword()));
+				userService.saveOrUpdate(user);
+			}
+			response.setStatus(HttpStatus.OK.value());
+			response.setMessage(" Password Updated.. ");
+		} else {
+			response.setStatus(HttpStatus.FORBIDDEN.value());
+			response.setMessage(" Please Register First ");
+		}
+		return response;
 	}
 
 	/**
-	 * This API is used to test whether the Application is running or not. 
-	 * @param name - can be empty or some user name as query param eg: /greeting?name= Rakesh Muppa
+	 * This API is used to test whether the Application is running or not.
+	 * 
+	 * @param name
+	 *            - can be empty or some user name as query param eg:
+	 *            /greeting?name= Rakesh Muppa
 	 * @return Hello World ..!
 	 */
-	@RequestMapping(value = "/greeting", method =RequestMethod.GET, produces = "application/json")
+	@RequestMapping(value = "/greeting", method = RequestMethod.GET, produces = "application/json")
 	public ResponseEntity<String> greeting(
 			@RequestParam(value = "name", required = false, defaultValue = "World") String name) {
 		logger.info(" default test API ~~> " + name);
