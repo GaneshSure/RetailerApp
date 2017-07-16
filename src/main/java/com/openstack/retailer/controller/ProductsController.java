@@ -17,10 +17,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.openstack.retailer.dtos.CategoryDTO;
 import com.openstack.retailer.dtos.ProductDTO;
 import com.openstack.retailer.dtos.ProductRequest;
+import com.openstack.retailer.entities.CategoryEntity;
 import com.openstack.retailer.entities.ProductEntity;
 import com.openstack.retailer.modelmapper.GenericModelMapper;
+import com.openstack.retailer.services.CategoryService;
 import com.openstack.retailer.services.ProductsService;
 
 /**
@@ -38,6 +41,9 @@ public class ProductsController {
 	@Autowired
 	private ProductsService productsService;
 
+	@Autowired
+	private CategoryService categoryService;
+	
 	@RequestMapping(value = "/saveProduct", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> saveProduct(@RequestBody ProductRequest productReq) {
 		ProductDTO productDTO = productReq.getData();
@@ -83,5 +89,12 @@ public class ProductsController {
 		ProductEntity product = productsService.getProductByCode(Long.valueOf(productCode));
 		ProductDTO productDTO = GenericModelMapper.map(product, ProductDTO.class);
 		return new ResponseEntity<ProductDTO>(productDTO, HttpStatus.OK);
+	}
+	
+	@RequestMapping(value = "/getCategories", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<CategoryDTO>> fetchAllCategories() {
+		List<CategoryEntity> categories = categoryService.getAllCategories();
+		List<CategoryDTO> categoryDTOs = GenericModelMapper.mapList(categories, CategoryDTO.class);
+		return new ResponseEntity<List<CategoryDTO>>(categoryDTOs, HttpStatus.OK);
 	}
 }

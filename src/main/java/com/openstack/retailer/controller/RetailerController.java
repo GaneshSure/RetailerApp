@@ -52,21 +52,26 @@ public class RetailerController {
 	public ResponseEntity<?> saveUser(@RequestBody UserRequest userReq) {
 		SuccessResponse response = new SuccessResponse();
 		if (userReq != null) {
-			UserDTO userDTO = userReq.getData();
-			userDTO.setPassword(new BCryptPasswordEncoder().encode(userDTO.getPassword()));
-			logger.info("Inside saveUser ~~> " + userDTO.getUserName());
-			UserEntity userEntity = GenericModelMapper.map(userDTO, UserEntity.class);
-			try {
-				userService.saveOrUpdate(userEntity);
-				response.setStatus(HttpStatus.OK.value());
-				response.setMessage("sign-up success");
+			UserEntity existingUser = userService.getUserByPhoneNumber(userReq.getData().getPhoneNumber());
+			if (existingUser == null) {
+				UserDTO userDTO = userReq.getData();
+				userDTO.setPassword(new BCryptPasswordEncoder().encode(userDTO.getPassword()));
+				logger.info("Inside saveUser ~~> " + userDTO.getUserName());
+				UserEntity userEntity = GenericModelMapper.map(userDTO, UserEntity.class);
+				try {
+					userService.saveOrUpdate(userEntity);
+					response.setStatus(HttpStatus.OK.value());
+					response.setMessage("sign-up success");
 
-			} catch (Exception e) {
-				logger.info(" Exception while saving user ~~> " + e.getMessage());
-				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-				response.setMessage(e.getMessage());
+				} catch (Exception e) {
+					logger.info(" Exception while saving user ~~> " + e.getMessage());
+					response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+					response.setMessage(e.getMessage());
+				}
+			} else {
+				response.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
+				response.setMessage(" Already registered with us.. Please log-in");
 			}
-
 		} else {
 			response.setStatus(HttpStatus.NOT_ACCEPTABLE.value());
 			response.setMessage(" Request Object is Empty ");
@@ -117,27 +122,33 @@ public class RetailerController {
 		UserDTO userForm = userReq.getData();
 		LoginResponse response = null;
 		logger.info("Inside login ~~> " + userForm.getPhoneNumber());
-		UserEntity userEntity = userService.getUserByUserId(userReq.getData().getUserName());
+		UserEntity userEntity = userService.getUserByPhoneNumber(userReq.getData().getPhoneNumber());
 
-		if (userForm.getPhoneNumber() == userEntity.getPhoneNumber()) {
+		if (userEntity != null && userForm.getPhoneNumber() == userEntity.getPhoneNumber()) {
+			logger.info(" Is mobile # matched = true ");
 			if (new BCryptPasswordEncoder().matches(userForm.getPassword(), userEntity.getPassword())) {
 				LoggedInUserDTO userDTO = new LoggedInUserDTO();
 				logger.info(" Is password matched with DB ==> "
 						+ new BCryptPasswordEncoder().matches(userForm.getPassword(), userEntity.getPassword()));
+
 				response = new LoginResponse();
 				response.setStatus(200);
-				response.setMessage("Sign-in Success");
+				response.setMessage("Log-in Success");
 				userDTO.setUserId(userEntity.getId());
 				userDTO.setName(userEntity.getUserName());
 				userDTO.setUserRole(userEntity.getUserRole());
 				response.setUser(userDTO);
-			} else
-				throw new UnAuthorizedException(userForm.getUserName(), "Authentication Error..!");
+			} else {
+				response = new LoginResponse();
+				response.setStatus(HttpStatus.UNAUTHORIZED.value());
+				response.setMessage("Please enter correct password..!");
+			}
 		} else {
 			response = new LoginResponse();
 			response.setStatus(HttpStatus.FORBIDDEN.value());
 			response.setMessage("Please Register First..!");
 		}
+
 		return response;
 	}
 
@@ -156,6 +167,7 @@ public class RetailerController {
 		if (userService.validateMobileNumber(request.getData().getPhoneNumber())) {
 			UserEntity user = userService.getUserByPhoneNumber(request.getData().getPhoneNumber());
 			if (user != null) {
+
 				user.setPassword(new BCryptPasswordEncoder().encode(request.getData().getNewPassword()));
 				userService.saveOrUpdate(user);
 			}

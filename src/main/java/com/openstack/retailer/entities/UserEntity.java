@@ -44,10 +44,10 @@ public class UserEntity implements Serializable {
 	@Column(name = "PHONE_NUMBER", unique = true)
 	private long phoneNumber;
 
-	@Column(name = "EMAIL_ID", unique = true)
+	@Column(name = "EMAIL_ID")
 	private String emailId;
 
-	@Column(name = "FIRM_NAME", unique = true)
+	@Column(name = "FIRM_NAME")
 	private String firmName;
 
 	@Column(name = "VILLAGE_OR_STREET_NAME")
@@ -61,5 +61,8 @@ public class UserEntity implements Serializable {
 	
 	@Column(name = "USER_TYPE")
 	private String userRole;
+	
+	@Column(name = "ADDRESS")
+	private String address;
 	
 }
