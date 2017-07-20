@@ -68,6 +68,11 @@ public class ProductsService {
 		}
 	}
 	
+	public List<ProductEntity> getProductByCtgryId(long ctgryId){
+		logger.info(" Inside getProductByCtgryId ~~> " + ctgryId);
+			return productsRepository.findByCtgryId(ctgryId);
+	}
+	
 	public ProductEntity getProductById(long productId){
 		logger.info(" Inside getProductById ~~> " + productId);
 		ProductEntity product = productsRepository.getOne(productId);

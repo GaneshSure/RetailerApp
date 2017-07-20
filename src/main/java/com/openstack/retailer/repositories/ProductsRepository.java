@@ -3,6 +3,8 @@
  */
 package com.openstack.retailer.repositories;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.openstack.retailer.entities.ProductEntity;
@@ -16,4 +18,6 @@ import com.openstack.retailer.entities.ProductEntity;
 public interface ProductsRepository extends JpaRepository<ProductEntity, Long> {
 
 	ProductEntity findByProductCode(Long productCode);
+	
+	List<ProductEntity> findByCtgryId(Long ctgryId);
 }

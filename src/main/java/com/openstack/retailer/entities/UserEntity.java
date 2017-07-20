@@ -21,7 +21,7 @@ import lombok.Data;
  * 
  */
 @Entity
-@Table(name = "RETAIL_REGISTRATIONS")
+@Table(name = "USERS")
 @Data
 public class UserEntity implements Serializable {
 

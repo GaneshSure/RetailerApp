@@ -21,7 +21,7 @@ import lombok.Data;
  * 
  */
 @Entity
-@Table(name = "CART_INFO")
+@Table(name = "CARTINFO")
 @Data
 public class CartEntity implements Serializable{
 

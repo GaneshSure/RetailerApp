@@ -30,11 +30,11 @@ public class CategoryEntity implements Serializable{/**
 	@Id
 	@Column(name = "ctgry_id")
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	private int id;
+	private long id;
 	
 	@Column(name="ctgry_name")
 	private String categoryName;
 	
-	@Column(name="ctgry_image")
+	@Column(name="ctgry_image", length = 1024)
 	private byte[] categoryImage;
 }
